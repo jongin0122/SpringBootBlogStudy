@@ -4,10 +4,12 @@ import com.cos.blog.model.RoleType;
 import com.cos.blog.model.User;
 import com.cos.blog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -78,5 +80,47 @@ public class DummyControllerTest {
 
        List<User> users=pagingUser.getContent();
        return users;
+    }
+
+    //email과 password를 받아보자.
+    //json 데이터를 요청 -> Java Object로 변환해서 받아준다.
+    //Message Converter의 Jackson라이브러리가 변환해서 받아준다.
+    @Transactional  //간단한 이해 : @Transactional을 걸면 save를 하지 않아도 업데이트가 된다. 함수 종료 시에 자동 commit됨
+    @PutMapping("/dummy/user/{id}")
+    public User updateUser(@PathVariable int id,@RequestBody User requestUser){
+        System.out.println("id : " + id);
+        System.out.println("password : " + requestUser.getPassword());
+        System.out.println("email : " + requestUser.getEmail());
+
+        //null값이 없는 기존의 꽉찬 user객체를 찾고
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("수정에 실패하였습니다.");
+        });
+
+        //그 user객체에 @RequestBody로 받아온 requestUser.getPassword()값을 저장(set)해주면
+        //꽉찬 데이터에 해당 데이터만 저장되므로 null값이 존재하지 않아서 update형식이 된다.
+        user.setPassword(requestUser.getPassword());
+        user.setEmail(requestUser.getEmail());
+
+        //save는 insert할 때 주로 쓴다.
+        //update 때 쓰려고 하면 넣지 않는 것 (username,role)은 Null로 변환해 버리는 문제가 있다.
+        //save함수는 id를 전달하지 않으면 insert를 해주고
+        //save함수는 id를 전달하면 해당 id에 대한 데이터가 있으면 update를 해주고
+        //save함수는 id를 전달하면 해당 id에 대한 데이터가 없으면 insert를 해준다.
+        //userRepository.save(user);
+
+        //더티 체킹
+        return user;
+    }
+
+    @DeleteMapping("/dummy/user/{id}")
+    public String delete(@PathVariable int id){
+        try{
+            userRepository.deleteById(id);
+        }catch(EmptyResultDataAccessException e){
+            return "삭제에 실패하였습니다. 해당 id는 DB에 없습니다.";
+        }
+
+        return "삭제 되었습니다. id :" + id;
     }
 }
