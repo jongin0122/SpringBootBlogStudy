@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class GloberExceptionHendler {
 
-    @ExceptionHandler(value=IllegalArgumentException.class)
-    public String handleArgumentException(IllegalArgumentException e){
+    @ExceptionHandler(value=Exception.class)
+    public String handleArgumentException(Exception e){
         return "<h1>" + e.getMessage() + "</h1>";
     }
+
 }
