@@ -17,6 +17,11 @@ public class UserService {
     //하나라도 실패를 한다면 rollback이 될 것이다.
     @Transactional
     public void 회원가입(User user){
-           userRepository.save(user);
+        userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true) // Select할 때 트랜젝션이 시작, 서비스가 종료될 때 트랜잭션 종료 (이때까지 정합성 유지)
+    public User 로그인(User user){
+        return userRepository.findByUsernameAndPassword(user.getUsername(), user.getPassword());
     }
 }
